@@ -3,7 +3,14 @@ function log(arg) {
     return arg;
 }
 
-const MASK_ID = "symphordle_mask";
+var MASK_ID = "symphordle_mask";
+var DROPDOWN_MIN_LENGTH = 3;
+var GET_TRACKS_MAX_ATTEMPTS = 200;
+var GET_TRACKS_WAIT_FOR_VISIBILITY_TIMEOUT = 10;
+var GET_TRACKS_SCROLL_TIMEOUT = 10;
+var SCROLL_UNTIL_SHOWING_MAX_ATTEMPTS = 10;
+var ENSURE_LOADED_MAX_ATTEMPTS = 1000;
+var ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT = 10;
 
 function main() {
     Promise.resolve({ start: Date.now() })
@@ -74,10 +81,7 @@ function getTracks(obj) {
 }
 
 function getTracksHelper(attempts, obj, resolve, reject) {
-    const MAX_ATTEMPTS = 200;
-    const WAIT_FOR_VISIBILITY_TIMEOUT = 10;
-    const SCROLL_TIMEOUT = 10;
-    if (attempts > MAX_ATTEMPTS) return reject("too many attempts");
+    if (attempts > GET_TRACKS_MAX_ATTEMPTS) return reject("too many attempts");
     const top = obj.viewport.scrollTop;
     var loading = true;
     Array.from(obj.rows.children)
@@ -94,6 +98,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
             if (obj.tracks[index] === undefined) {
                 const track = child.children[1].children[1];
                 obj.tracks.push({
+                    index,
                     scroll: top,
                     img: child.children[1].children[0].src,
                     title: track.children[0].innerText,
@@ -106,7 +111,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
     if (loading)
         return setTimeout(
             () => getTracksHelper(++attempts, obj, resolve, reject),
-            WAIT_FOR_VISIBILITY_TIMEOUT
+            GET_TRACKS_WAIT_FOR_VISIBILITY_TIMEOUT
         );
     if (obj.tracks.length === obj.rowCount) return resolve(obj);
     obj.viewport.scrollTo({
@@ -118,7 +123,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
         );
     return setTimeout(
         () => getTracksHelper(0, obj, resolve, reject),
-        SCROLL_TIMEOUT
+        GET_TRACKS_SCROLL_TIMEOUT
     );
 }
 
@@ -143,8 +148,8 @@ function scrollUntilShowing(obj) {
 }
 
 function scrollUntilShowingHelper(attempts, obj, resolve, reject) {
-    const MAX_ATTEMPTS = 10;
-    if (attempts > MAX_ATTEMPTS) return reject("too many attempts");
+    if (attempts > SCROLL_UNTIL_SHOWING_MAX_ATTEMPTS)
+        return reject("too many attempts");
     const track = Array.from(obj.rows.children)
         .map((child) => child.children[0])
         .find((child) => {
@@ -182,8 +187,37 @@ function fillMask(obj) {
                     .play()
                     .then(() => setTimeout(pause.onclick, obj.duration + 50));
             };
+            const inputE = getMaskElementById(obj.mask, "input");
+            inputE.onkeyup = () => {
+                getMaskElementById(obj.mask, "dropdown").replaceChildren(
+                    ...getDropdownChildren(inputE.value.toLowerCase(), obj)
+                );
+            };
             return obj;
         });
+}
+
+function getDropdownChildren(value, obj) {
+    return obj.tracks
+        .map((track) => ({...track, lowerTitle: track.title.toLowerCase() }))
+        .filter(
+            (track) =>
+            track.lowerTitle === value ||
+            (track.lowerTitle.includes(value) &&
+                value.length >= DROPDOWN_MIN_LENGTH)
+        )
+        .sort((a, b) => (a.lowerTitle > b.lowerTitle ? 1 : -1))
+        .sort((a, b) => (a.lowerTitle.startsWith(value) ? -1 : 1))
+        .map((track) => {
+            const div = document.createElement("div");
+            div.innerText = `${track.title} - ${track.artists.join(", ")}`;
+            div.onclick = () => clickDropdown(track.index, obj);
+            return div;
+        });
+}
+
+function clickDropdown(index, obj) {
+    console.log(index);
 }
 
 function ensureLoaded(obj) {
@@ -200,13 +234,11 @@ function ensureLoaded(obj) {
 }
 
 function ensureLoadedHelper(attempts, obj, resolve, reject) {
-    const MAX_ATTEMPTS = 1000;
-    const WAIT_FOR_LOADED_TIMEOUT = 10;
     if (!obj.video.paused) return resolve(obj);
-    if (attempts > MAX_ATTEMPTS) return reject("too many attempts");
+    if (attempts > ENSURE_LOADED_MAX_ATTEMPTS) return reject("too many attempts");
     return setTimeout(
         () => ensureLoadedHelper(++attempts, obj, resolve, reject),
-        WAIT_FOR_LOADED_TIMEOUT
+        ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT
     );
 }
 
