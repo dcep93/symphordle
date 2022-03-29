@@ -7,46 +7,51 @@
         z-index: -1;
         font-family: "Courier New", Courier, monospace;
     }
-    
-    #symphordle_mask .hover:hover {
+</style>
+<style scoped>
+    .hover:hover {
         cursor: pointer;
     }
     
-    #symphordle_mask .show_first>*:not(:first-child) {
+    .show_first>*:not(:first-child) {
         display: none;
     }
     
-    #symphordle_mask #play_pause {
+    #play_pause {
         display: inline-block;
     }
     
-    #symphordle_mask #play_pause[data-nextaction="play"]>#pause {
+    #play_pause[data-nextaction="play"]>#pause {
         display: none;
     }
     
-    #symphordle_mask #play_pause[data-nextaction="pause"]>#play {
+    #play_pause[data-nextaction="pause"]>#play {
         display: none;
     }
     
-    #symphordle_mask #input {
+    input {
         color: black;
     }
     
-    #symphordle_mask #dropdown {
+    #dropdown {
         max-height: 25em;
         overflow: scroll;
     }
     
-    #symphordle_mask #dropdown>*[selected="true"] {
+    #dropdown>*[selected="true"] {
         background-color: #333;
     }
     
-    #symphordle_mask .yellow {
+    .yellow {
         background-color: rgb(57, 42, 0);
+    }
+    
+    #round_durations>*:first-child .delete {
+        display: none;
     }
 </style>
 <div>
-    <h3>Welcome to <a href="https://google.com">Symphordle</a></h3>
+    <h1>Welcome to <a href="https://google.com">Symphordle</a></h1>
     <div class="show_first">
         <div id="loading">loading <span id="loading_percent">0</span>%</div>
         <div>
@@ -98,8 +103,16 @@
                     <img id="answer_img" src="" />
                 </div>
                 <div>
-                    <div id="settings_toggle"></div>
-                    <div id="settings"></div>
+                    <h2>settings</h2>
+                    <div>
+                        <span>delay between rounds:</span>
+                        <input id="next_delay" type="number" style="width: 5em" autocomplete="off" />
+                    </div>
+                    <div>
+                        <h3>round durations</h3>
+                        <div id="round_durations"></div>
+                        <input id="add_round" type="button" value="add round" />
+                    </div>
                 </div>
             </div>
         </div>

@@ -182,14 +182,15 @@ function setTargetIndex(obj) {
     const link = getMaskElementById(obj.mask, "link");
     link.innerText = location.href;
     link.href = location.href;
-    return Promise.resolve(obj).then((obj) =>
-        Object.assign(obj, {
-            settings: getSettings(obj),
-            targetIndex: Math.floor(
-                obj.tracks.length * random(location.hash + obj.seed)
-            ),
-        })
-    );
+    return Promise.resolve()
+        .then(() => setSettings(obj))
+        .then(() =>
+            Object.assign(obj, {
+                targetIndex: Math.floor(
+                    obj.tracks.length * random(location.hash + obj.seed)
+                ),
+            })
+        );
 }
 
 function md5(inputString) {
@@ -367,13 +368,75 @@ function getMaskElementById(mask, id, cb) {
     return e;
 }
 
-function getSettings(obj) {
-    return { next_delay: 2000, durations: [1000, 2000] }; // todo dcep93
+function setSettings(obj) {
+    return new Promise((resolve, reject) =>
+            chrome.storage.sync.get(["settings"], (result) =>
+                resolve(result.settings || {})
+            )
+        )
+        .then((settings) =>
+            Object.assign({ next_delay: 2.0, durations: [1.0, 2.0] }, settings)
+        )
+        .then((settings) => Object.assign(obj, { settings }))
+        .then(renderSettings);
+}
+
+function updateSettings(obj) {
+    chrome.storage.sync.set({ settings: obj.settings });
+    renderSettings(obj);
+}
+
+function renderSettings(obj) {
+    getMaskElementById(
+        obj.mask,
+        "next_delay",
+        (e) => (e.value = obj.settings.next_delay.toFixed(2))
+    );
+    const round_durations = getMaskElementById(obj.mask, "round_durations");
+    round_durations.replaceChildren(
+        ...obj.settings.durations.map((duration, i) => {
+            const div = document.createElement("div");
+            const e = document.createElement("input");
+            e.setAttribute("type", "number");
+            e.value = duration.toFixed(2);
+            e.onupdate = () => {
+                obj.settings.durations[i] = e.value;
+                updateSettings(obj);
+            };
+            const d = document.createElement("span");
+            d.innerText = "❌";
+            d.classList.add("delete");
+            d.classList.add("hover");
+            d.onclick = () => {
+                obj.settings.durations.splice(i, 1);
+                updateSettings(obj);
+            };
+            div.replaceChildren(e, d);
+            return div;
+        })
+    );
+    return obj;
 }
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
     return Promise.resolve().then(() => {
+        getMaskElementById(
+            obj.mask,
+            "next_delay",
+            (e) => (e.oninput = () => updateSettings(obj))
+        );
+        getMaskElementById(
+            obj.mask,
+            "add_round",
+            (e) =>
+            (e.onclick = () => {
+                obj.settings.durations.push(
+                    obj.settings.durations[obj.settings.durations.length - 1] + 1
+                );
+                updateSettings(obj);
+            })
+        );
         getMaskElementById(obj.mask, "next").onclick = () => clickNext(obj);
         const playpause = getMaskElementById(obj.mask, "play_pause");
         const pause = getMaskElementById(obj.mask, "pause");
@@ -388,7 +451,7 @@ function fillMask(obj) {
             obj.video.currentTime = 0;
             playpause.setAttribute("data-nextaction", "pause");
             obj.video.play().then(() => {
-                const duration = obj.settings.durations[obj.guesses];
+                const duration = 1000 * obj.settings.durations[obj.guesses];
                 setTimeout(() => {
                     setTimeout(
                         pause.onclick,
@@ -399,7 +462,7 @@ function fillMask(obj) {
         };
         const dropdown = getMaskElementById(obj.mask, "dropdown");
         var inputT;
-        obj.inputE.onkeyup = () => {
+        obj.inputE.oninput = () => {
             const n = normalize(obj.inputE.value);
             if (n === inputT) return;
             inputT = n;
@@ -504,7 +567,7 @@ function submitGuess(str, isYellow, obj) {
 function showAnswer(obj) {
     obj.finished = true;
     setNextText(obj);
-    const next_delay = obj.settings.next_delay;
+    const next_delay = obj.settings.next_delay * 1000;
     if (next_delay) {
         obj.click_next_timeout = setTimeout(() => clickNext(obj), next_delay);
     } else {
