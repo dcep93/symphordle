@@ -120,7 +120,6 @@ function prepareMask(obj) {
             ...obj,
             targetIndex: Math.floor(obj.tracks.length * Math.random()),
         }))
-        .then(log)
         .then(scrollUntilShowing)
         .then(ensureLoaded)
         .then(fillMask);
@@ -209,6 +208,7 @@ function ensureLoadedHelper(attempts, obj, resolve, reject) {
 
 function finish(obj) {
     console.log("finish", (Date.now() - obj.start) / 1000);
+    console.log(obj.tracks[obj.targetIndex]);
 }
 
 main();
