@@ -1,0 +1,26 @@
+{
+    "name": "ASymphordle",
+    "description": "Play a music guessing game on open.spotify.com",
+    "version": "0.0.1",
+    "permissions": ["activeTab", "scripting"],
+    "icons": {
+        "16": "favicon.png",
+        "48": "favicon.png",
+        "128": "favicon.png"
+    },
+    "background": { "service_worker": "background.js" },
+    "content_scripts": [{
+        "matches": ["https://open.spotify.com/playlist/**"],
+        "js": ["dummy.js"]
+    }],
+    "action": {
+        "default_icon": "favicon.png"
+    },
+    "web_accessible_resources": [{
+        "resources": ["mask.html"],
+        "matches": [
+            "https://open.spotify.com/*"
+        ]
+    }],
+    "manifest_version": 3
+}

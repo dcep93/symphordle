@@ -1,0 +1,47 @@
+<style>
+    #symphordle_mask {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        background-color: black;
+        z-index: -1;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    
+    #symphordle_mask .show_first>*:not(:first-child) {
+        display: none;
+    }
+    
+    #symphordle_mask #play_pause {
+        display: inline-block;
+    }
+    
+    #symphordle_mask #close:hover {
+        cursor: pointer;
+    }
+    
+    #symphordle_mask #play_pause[data-nextaction="play"]>#pause {
+        display: none;
+    }
+    
+    #symphordle_mask #play_pause[data-nextaction="pause"]>#play {
+        display: none;
+    }
+</style>
+<div>
+    <h3>Welcome to Symphordle</h3>
+    <div class="show_first">
+        <div id=loading>loading...</div>
+        <div>
+            <div id="close">close</div>
+            <div id="play_pause" data-nextaction="play">
+                <div id="play">
+                    <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Play" data-testid="control-button-playpause" style="--button-size:32px;" aria-expanded="false"><svg role="img" height="16" width="16" viewBox="0 0 16 16" class="Svg-sc-1bi12j5-0 hDgDGI"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"></path></svg></button>
+                </div>
+                <div id="pause">
+                    <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Pause" data-testid="control-button-playpause" style="--button-size:32px;" aria-expanded="false"><svg role="img" height="16" width="16" viewBox="0 0 16 16" class="Svg-sc-1bi12j5-0 hDgDGI"><path d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z"></path></svg></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
