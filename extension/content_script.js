@@ -149,6 +149,11 @@ function getTracksHelper(attempts, obj, resolve, reject) {
             () => getTracksHelper(++attempts, obj, resolve, reject),
             GET_TRACKS_WAIT_FOR_VISIBILITY_TIMEOUT
         );
+    getMaskElementById(
+        obj.mask,
+        "loading_percent",
+        (e) => (e.innerText = Math.floor((100 * obj.tracks.length) / obj.rowCount))
+    );
     if (obj.tracks.length === obj.rowCount) return resolve(obj);
     obj.viewport.scrollTo({
         top: top + obj.viewport.offsetHeight,
@@ -179,7 +184,7 @@ function setTargetIndex(obj) {
     link.href = location.href;
     return Promise.resolve(obj).then((obj) =>
         Object.assign(obj, {
-            settings: getSettings(),
+            settings: getSettings(obj),
             targetIndex: Math.floor(
                 obj.tracks.length * random(location.hash + obj.seed)
             ),
@@ -362,7 +367,7 @@ function getMaskElementById(mask, id, cb) {
     return e;
 }
 
-function getSettings() {
+function getSettings(obj) {
     return { next_delay: 2000, durations: [1000, 2000] }; // todo dcep93
 }
 
