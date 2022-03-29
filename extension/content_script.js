@@ -171,6 +171,9 @@ function setTargetIndex(obj) {
     console.log("setTargetIndex", (Date.now() - obj.start) / 1000);
     if (!location.hash.substring(1))
         location.hash = new Date().toLocaleDateString();
+    const link = getMaskElementById(obj.mask, "link");
+    link.innerText = location.href;
+    link.href = location.href;
     return Promise.resolve(obj).then((obj) =>
         Object.assign(obj, {
             targetIndex: Math.floor(
@@ -545,9 +548,6 @@ function ensureLoadedHelper(attempts, obj, resolve, reject) {
 }
 
 function postLoaded(obj) {
-    const link = getMaskElementById(obj.mask, "link");
-    link.innerText = location.href;
-    link.href = location.href;
     getMaskElementById(obj.mask, "guesses").replaceChildren();
     obj.guesses = 0;
     obj.finished = false;
