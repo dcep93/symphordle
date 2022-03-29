@@ -3,12 +3,18 @@ function log(arg) {
     return arg;
 }
 
+const MASK_ID = "symphordle_mask";
+
 function main() {
     Promise.resolve({ start: Date.now() })
         .then(getDivs)
         .then(getTracks)
         .then(prepareMask)
-        .then(finish);
+        .then(finish)
+        .catch((err) => {
+            removeMask();
+            throw err;
+        });
 }
 
 function getDivs(obj) {
@@ -40,10 +46,13 @@ function getTracklistDiv() {
         );
 }
 
-function getMask() {
-    const MASK_ID = "symphordle_mask";
+function removeMask() {
     const oldMask = document.getElementById(MASK_ID);
     if (oldMask) oldMask.remove();
+}
+
+function getMask() {
+    removeMask();
     const mask = document.createElement("div");
     mask.id = MASK_ID;
     document.body.appendChild(mask);
@@ -159,11 +168,6 @@ function fillMask(obj) {
     return Promise.resolve(obj)
         .then((obj) => ({...obj, duration: 1000 }))
         .then((obj) => {
-            obj.main.style.opacity = 1;
-            obj.mask.style.zIndex = 0;
-            getMaskElementById(obj.mask, "close").onclick = () => obj.mask.remove();
-            getMaskElementById(obj.mask, "loading").remove();
-
             const playpause = getMaskElementById(obj.mask, "play_pause");
             const pause = getMaskElementById(obj.mask, "pause");
             pause.onclick = () => {
@@ -208,6 +212,10 @@ function ensureLoadedHelper(attempts, obj, resolve, reject) {
 
 function finish(obj) {
     console.log("finish", (Date.now() - obj.start) / 1000);
+    obj.main.style.opacity = 1;
+    obj.mask.style.zIndex = 0;
+    getMaskElementById(obj.mask, "close").onclick = () => obj.mask.remove();
+    getMaskElementById(obj.mask, "loading").remove();
     console.log(obj.tracks[obj.targetIndex]);
 }
 
