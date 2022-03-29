@@ -356,7 +356,11 @@ function getMaskElementById(mask, id) {
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
     return Promise.resolve()
-        .then(() => Object.assign(obj, { durations: [1000, 2000] }))
+        .then(() =>
+            Object.assign(obj, {
+                settings: { next_delay: 2000, durations: [1000, 2000] },
+            })
+        )
         .then(() => {
             getMaskElementById(obj.mask, "next").onclick = () => clickNext(obj);
             const playpause = getMaskElementById(obj.mask, "play_pause");
@@ -365,13 +369,14 @@ function fillMask(obj) {
                 playpause.setAttribute("data-nextaction", "play");
                 obj.video.pause();
                 console.log("played time", obj.video.currentTime);
+                obj.video.currentTime = 0;
             };
             const play = getMaskElementById(obj.mask, "play");
             play.onclick = () => {
                 obj.video.currentTime = 0;
                 playpause.setAttribute("data-nextaction", "pause");
                 obj.video.play().then(() => {
-                    const duration = obj.durations[obj.guesses];
+                    const duration = obj.settings.durations[obj.guesses];
                     setTimeout(() => {
                         setTimeout(
                             pause.onclick,
@@ -451,6 +456,8 @@ function getDropdownChildren(value, obj) {
 
 function clickDropdown(index, obj) {
     if (index === obj.targetIndex) {
+        obj.inputE.value = "";
+        obj.inputE.onkeyup();
         showAnswer(obj);
         return;
     }
@@ -461,7 +468,8 @@ function clickDropdown(index, obj) {
 }
 
 function clickNext(obj) {
-    if (obj.guesses === -1) {
+    clearTimeout(obj.click_next_timeout);
+    if (obj.finished) {
         updateHash(obj);
         play(obj);
         return;
@@ -470,19 +478,29 @@ function clickNext(obj) {
 }
 
 function submitGuess(str, isYellow, obj) {
+    obj.inputE.value = "";
+    obj.inputE.onkeyup();
     const div = document.createElement("div");
     div.innerText = str;
     if (isYellow) div.classList.add("yellow");
     getMaskElementById(obj.mask, "guesses").appendChild(div);
-    if (++obj.guesses === obj.durations.length) showAnswer(obj);
+    if (obj.guesses === obj.settings.durations.length - 1) return showAnswer(obj);
+    obj.guesses++;
 }
 
 function showAnswer(obj) {
-    obj.inputE.value = "";
-    obj.inputE.onkeyup();
-    obj.guesses = -1;
+    obj.finished = true;
     const next = getMaskElementById(obj.mask, "next");
     next.innerText = "(next song)";
+    const next_delay = obj.settings.next_delay;
+    if (next_delay) {
+        obj.click_next_timeout = setTimeout(() => clickNext(obj), next_delay);
+    } else {
+        const playpause = getMaskElementById(obj.mask, "play_pause");
+        playpause.setAttribute("data-nextaction", "pause");
+        obj.video.currentTime = 0;
+        obj.video.play();
+    }
     // todo dcep93
 }
 
@@ -532,6 +550,7 @@ function postLoaded(obj) {
     link.href = location.href;
     getMaskElementById(obj.mask, "guesses").replaceChildren();
     obj.guesses = 0;
+    obj.finished = false;
     setNextText(obj);
     getMaskElementById(obj.mask, "play").onclick();
     return obj;
