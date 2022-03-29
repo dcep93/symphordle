@@ -3,12 +3,17 @@
         position: absolute;
         width: 100vw;
         height: 100vh;
-        background-color: black;
         z-index: -1;
-        font-family: "Courier New", Courier, monospace;
     }
 </style>
 <style scoped>
+    #container {
+        height: 100%;
+        overflow: scroll;
+        background-color: black;
+        font-family: "Courier New", Courier, monospace;
+    }
+    
     .hover:hover {
         cursor: pointer;
     }
@@ -50,7 +55,7 @@
         display: none;
     }
 </style>
-<div>
+<div id="container">
     <h1>Welcome to <a href="https://google.com">Symphordle</a></h1>
     <div class="show_first">
         <div id="loading">loading <span id="loading_percent">0</span>%</div>

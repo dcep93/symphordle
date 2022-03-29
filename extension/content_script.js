@@ -144,7 +144,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                 obj.tracks[index] = track;
             }
         });
-    if (loading)
+    if (loading || scrolledBack)
         return setTimeout(
             () => getTracksHelper(++attempts, obj, resolve, reject),
             GET_TRACKS_WAIT_FOR_VISIBILITY_TIMEOUT
@@ -169,7 +169,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
 }
 
 function normalize(str) {
-    ["'", '"', "."].forEach((r) => {
+    ["'", '"', ".", ","].forEach((r) => {
         str = str.replaceAll(r, "");
     });
     return str.toLowerCase();
@@ -375,7 +375,7 @@ function setSettings(obj) {
             )
         )
         .then((settings) =>
-            Object.assign({ next_delay: 2.0, durations: [1.0, 2.0] }, settings)
+            Object.assign({ next_delay: "2.0", durations: ["1.0", "2.0"] }, settings)
         )
         .then((settings) => Object.assign(obj, { settings }))
         .then(renderSettings);
@@ -383,6 +383,7 @@ function setSettings(obj) {
 
 function updateSettings(obj) {
     chrome.storage.sync.set({ settings: obj.settings });
+    console.log(obj.settings);
     renderSettings(obj);
 }
 
@@ -390,7 +391,7 @@ function renderSettings(obj) {
     getMaskElementById(
         obj.mask,
         "next_delay",
-        (e) => (e.value = obj.settings.next_delay.toFixed(2))
+        (e) => (e.value = obj.settings.next_delay)
     );
     const round_durations = getMaskElementById(obj.mask, "round_durations");
     round_durations.replaceChildren(
@@ -398,7 +399,7 @@ function renderSettings(obj) {
             const div = document.createElement("div");
             const e = document.createElement("input");
             e.setAttribute("type", "number");
-            e.value = duration.toFixed(2);
+            e.value = duration;
             e.onupdate = () => {
                 obj.settings.durations[i] = e.value;
                 updateSettings(obj);
@@ -424,7 +425,11 @@ function fillMask(obj) {
         getMaskElementById(
             obj.mask,
             "next_delay",
-            (e) => (e.oninput = () => updateSettings(obj))
+            (e) =>
+            (e.oninput = () => {
+                obj.settings.next_delay = e.value || "0";
+                updateSettings(obj);
+            })
         );
         getMaskElementById(
             obj.mask,
@@ -531,7 +536,7 @@ function getDropdownChildren(value, obj) {
 function clickDropdown(index, obj) {
     if (index === obj.targetIndex) {
         obj.inputE.value = "";
-        obj.inputE.onkeyup();
+        obj.inputE.oninput();
         showAnswer(obj);
         return;
     }
@@ -553,12 +558,12 @@ function clickNext(obj) {
 
 function submitGuess(str, isYellow, obj) {
     obj.inputE.value = "";
-    obj.inputE.onkeyup();
+    obj.inputE.oninput();
     const div = document.createElement("div");
     div.innerText = str;
     if (isYellow) div.classList.add("yellow");
     getMaskElementById(obj.mask, "guesses").appendChild(div);
-    if (obj.guesses === obj.settings.durations.length - 1) return showAnswer(obj);
+    if (obj.guesses >= obj.settings.durations.length - 1) return showAnswer(obj);
     obj.guesses++;
     setNextText(obj);
     getMaskElementById(obj.mask, "play").onclick();
@@ -612,6 +617,7 @@ function ensureLoaded(obj) {
         )
         .then(() => obj.video.pause())
         .then(() => (obj.video.volume = prevVolume))
+        .then(() => (obj.video.currentTime = 0))
         .then(() => console.log(obj.tracks[obj.targetIndex]))
         .then(() => obj);
 }
