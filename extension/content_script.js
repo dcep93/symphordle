@@ -116,7 +116,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                 const track = {
                     index,
                     scroll: top,
-                    img: child.children[1].children[0].src,
+                    img: child.children[1].children[0].src.split("4851").join("b273"),
                     title: trackE.children[0].innerText,
                     artists: Array.from(
                         trackE.children[trackE.children.length - 1].children
