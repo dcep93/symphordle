@@ -179,6 +179,7 @@ function setTargetIndex(obj) {
     link.href = location.href;
     return Promise.resolve(obj).then((obj) =>
         Object.assign(obj, {
+            settings: getSettings(),
             targetIndex: Math.floor(
                 obj.tracks.length * random(location.hash + obj.seed)
             ),
@@ -367,69 +368,62 @@ function getSettings() {
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
-    return Promise.resolve()
-        .then(() =>
-            Object.assign(obj, {
-                settings: getSettings(),
-            })
-        )
-        .then(() => {
-            getMaskElementById(obj.mask, "next").onclick = () => clickNext(obj);
-            const playpause = getMaskElementById(obj.mask, "play_pause");
-            const pause = getMaskElementById(obj.mask, "pause");
-            pause.onclick = () => {
-                playpause.setAttribute("data-nextaction", "play");
-                obj.video.pause();
-                console.log("played time", obj.video.currentTime);
-                obj.video.currentTime = 0;
-            };
-            const play = getMaskElementById(obj.mask, "play");
-            play.onclick = () => {
-                obj.video.currentTime = 0;
-                playpause.setAttribute("data-nextaction", "pause");
-                obj.video.play().then(() => {
-                    const duration = obj.settings.durations[obj.guesses];
-                    setTimeout(() => {
-                        setTimeout(
-                            pause.onclick,
-                            duration - 3 - obj.video.currentTime * 1000 // offset a bit
-                        );
-                    }, duration - 200);
-                });
-            };
-            const dropdown = getMaskElementById(obj.mask, "dropdown");
-            var inputT;
-            obj.inputE.onkeyup = () => {
-                const n = normalize(obj.inputE.value);
-                if (n === inputT) return;
-                inputT = n;
-                dropdown.replaceChildren(...getDropdownChildren(inputT, obj));
-            };
-            obj.mask.onkeyup = (e) => {
-                var selected = Array.from(dropdown.children).findIndex(
-                    (c) => c.getAttribute("selected") !== null
-                );
-                if (e.key === "ArrowUp") {
-                    selected =
-                        selected <= 0 ? dropdown.children.length - 1 : selected - 1;
-                } else if (e.key === "ArrowDown") {
-                    selected =
-                        selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
-                } else if (e.key === "Enter") {
-                    selected = selected === -1 ? 0 : selected;
-                    const s = dropdown.children[selected];
-                    if (!s) return submitGuess("(skipped)", false, obj);
-                    const index = parseInt(s.getAttribute("index"));
-                    clickDropdown(index, obj);
-                } else {
-                    return;
-                }
-                const child = dropdown.children[selected];
-                if (!child) return;
-                child.onmouseenter();
-            };
-            return obj;
-        });
+    return Promise.resolve().then(() => {
+        getMaskElementById(obj.mask, "next").onclick = () => clickNext(obj);
+        const playpause = getMaskElementById(obj.mask, "play_pause");
+        const pause = getMaskElementById(obj.mask, "pause");
+        pause.onclick = () => {
+            playpause.setAttribute("data-nextaction", "play");
+            obj.video.pause();
+            console.log("played time", obj.video.currentTime);
+            obj.video.currentTime = 0;
+        };
+        const play = getMaskElementById(obj.mask, "play");
+        play.onclick = () => {
+            obj.video.currentTime = 0;
+            playpause.setAttribute("data-nextaction", "pause");
+            obj.video.play().then(() => {
+                const duration = obj.settings.durations[obj.guesses];
+                setTimeout(() => {
+                    setTimeout(
+                        pause.onclick,
+                        duration - 3 - obj.video.currentTime * 1000 // offset a bit
+                    );
+                }, duration - 200);
+            });
+        };
+        const dropdown = getMaskElementById(obj.mask, "dropdown");
+        var inputT;
+        obj.inputE.onkeyup = () => {
+            const n = normalize(obj.inputE.value);
+            if (n === inputT) return;
+            inputT = n;
+            dropdown.replaceChildren(...getDropdownChildren(inputT, obj));
+        };
+        obj.mask.onkeyup = (e) => {
+            var selected = Array.from(dropdown.children).findIndex(
+                (c) => c.getAttribute("selected") !== null
+            );
+            if (e.key === "ArrowUp") {
+                selected = selected <= 0 ? dropdown.children.length - 1 : selected - 1;
+            } else if (e.key === "ArrowDown") {
+                selected =
+                    selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
+            } else if (e.key === "Enter") {
+                selected = selected === -1 ? 0 : selected;
+                const s = dropdown.children[selected];
+                if (!s) return submitGuess("(skipped)", false, obj);
+                const index = parseInt(s.getAttribute("index"));
+                clickDropdown(index, obj);
+            } else {
+                return;
+            }
+            const child = dropdown.children[selected];
+            if (!child) return;
+            child.onmouseenter();
+        };
+        return obj;
+    });
 }
 
 function getDropdownChildren(value, obj) {
@@ -498,12 +492,13 @@ function submitGuess(str, isYellow, obj) {
     getMaskElementById(obj.mask, "guesses").appendChild(div);
     if (obj.guesses === obj.settings.durations.length - 1) return showAnswer(obj);
     obj.guesses++;
+    setNextText(obj);
+    getMaskElementById(obj.mask, "play").onclick();
 }
 
 function showAnswer(obj) {
     obj.finished = true;
-    const next = getMaskElementById(obj.mask, "next");
-    next.innerText = "(next song)";
+    setNextText(obj);
     const next_delay = obj.settings.next_delay;
     if (next_delay) {
         obj.click_next_timeout = setTimeout(() => clickNext(obj), next_delay);
@@ -575,7 +570,14 @@ function postLoaded(obj) {
 
 function setNextText(obj) {
     const next = getMaskElementById(obj.mask, "next");
-    next.innerText = "(skip)";
+    if (obj.finished) {
+        next.innerText = "(next song)";
+    } else {
+        const diff =
+            obj.settings.durations[obj.guesses + 1] -
+            obj.settings.durations[obj.guesses];
+        next.innerText = isNaN(diff) ? "(give up)" : `(skip +${diff})`;
+    }
 }
 
 function finish(obj) {
