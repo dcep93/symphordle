@@ -32,21 +32,24 @@ function play(obj) {
 
 function getDivs(obj) {
     console.log("getDivs", (Date.now() - obj.start) / 1000);
-    return Promise.resolve(obj)
-        .then((obj) =>
-            getTracklistDiv().then((tracklistDiv) => ({...obj, tracklistDiv }))
+    return Promise.resolve()
+        .then(() =>
+            getTracklistDiv().then((tracklistDiv) =>
+                Object.assign(obj, { tracklistDiv })
+            )
         )
-        .then((obj) => getMask().then((mask) => ({...obj, mask })))
-        .then((obj) => ({
-            ...obj,
-            rows: obj.tracklistDiv.children[1].children[1],
-            viewport: document
-                .getElementsByClassName("Root__main-view")[0]
-                .getElementsByClassName("os-viewport")[0],
-            main: document.getElementById("main"),
-            video: document.getElementsByTagName("video")[0],
-            inputE: getMaskElementById(obj.mask, "input"),
-        }));
+        .then(() => getMask().then((mask) => Object.assign(obj, { mask })))
+        .then(() =>
+            Object.assign(obj, {
+                rows: obj.tracklistDiv.children[1].children[1],
+                viewport: document
+                    .getElementsByClassName("Root__main-view")[0]
+                    .getElementsByClassName("os-viewport")[0],
+                main: document.getElementById("main"),
+                video: document.getElementsByTagName("video")[0],
+                inputE: getMaskElementById(obj.mask, "input"),
+            })
+        );
 }
 
 function getTracklistDiv() {
@@ -86,12 +89,13 @@ function getTracks(obj) {
     return new Promise((resolve, reject) =>
             getTracksHelper(-5, obj, resolve, reject)
         )
-        .then((obj) => ({
-            ...obj,
-            tracks: Object.values(
-                Object.fromEntries(obj.tracks.map((t) => [t.displayName, t]))
-            ),
-        }))
+        .then((obj) =>
+            Object.assign(obj, {
+                tracks: Object.values(
+                    Object.fromEntries(obj.tracks.map((t) => [t.displayName, t]))
+                ),
+            })
+        )
         .then((obj) => obj.viewport.scrollTo({ top: 0 }) || obj);
 }
 
@@ -159,12 +163,13 @@ function setTargetIndex(obj) {
     console.log("setTargetIndex", (Date.now() - obj.start) / 1000);
     if (!location.hash.substring(1))
         location.hash = new Date().toLocaleDateString();
-    return Promise.resolve(obj).then((obj) => ({
-        ...obj,
-        targetIndex: Math.floor(
-            obj.tracks.length * random(location.hash + obj.seed)
-        ),
-    }));
+    return Promise.resolve(obj).then((obj) =>
+        Object.assign(obj, {
+            targetIndex: Math.floor(
+                obj.tracks.length * random(location.hash + obj.seed)
+            ),
+        })
+    );
 }
 
 function md5(inputString) {
@@ -342,9 +347,9 @@ function getMaskElementById(mask, id) {
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
-    return Promise.resolve(obj)
-        .then((obj) => ({...obj, duration: 1000 }))
-        .then((obj) => {
+    return Promise.resolve()
+        .then(() => Object.assign(obj, { duration: 1000 }))
+        .then(() => {
             const playpause = getMaskElementById(obj.mask, "play_pause");
             const pause = getMaskElementById(obj.mask, "pause");
             pause.onclick = () => {
@@ -477,7 +482,8 @@ function ensureLoaded(obj) {
         .then(() => obj.video.pause())
         .then(() => (obj.video.volume = 1))
         .then(() => console.log(obj.tracks[obj.targetIndex]))
-        .then(() => obj);
+        .then(() => obj)
+        .then(updateRender);
 }
 
 function ensureLoadedHelper(attempts, obj, resolve, reject) {
@@ -487,6 +493,13 @@ function ensureLoadedHelper(attempts, obj, resolve, reject) {
         () => ensureLoadedHelper(++attempts, obj, resolve, reject),
         ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT
     );
+}
+
+function updateRender(obj) {
+    const link = getMaskElementById(obj.mask, "link");
+    link.innerText = location.href;
+    link.href = location.href;
+    return obj;
 }
 
 function finish(obj) {
