@@ -16,8 +16,8 @@ function main() {
     Promise.resolve({ start: Date.now() })
         .then(getDivs)
         .then(getTracks)
-        .then(play)
         .then(fillMask)
+        .then(play)
         .then(finish)
         .catch(removeMask);
 }
@@ -27,6 +27,7 @@ function play(obj) {
         .then(setTargetIndex)
         .then(scrollUntilShowing)
         .then(ensureLoaded)
+        .then(postLoaded)
         .catch(removeMask);
 }
 
@@ -66,7 +67,10 @@ function getTracklistDiv() {
 function removeMask(err) {
     const oldMask = document.getElementById(MASK_ID);
     if (oldMask) oldMask.remove();
-    if (err) throw err;
+    if (err) {
+        document.getElementById("main").style.opacity = 1;
+        throw err;
+    }
 }
 
 function getMask() {
@@ -135,7 +139,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                         trackE.children[trackE.children.length - 1].children
                     ).map((artist) => artist.innerText),
                 };
-                track.lowerTitle = track.title.toLowerCase();
+                track.normalizedTitle = normalize(track.title);
                 track.displayName = `${track.title} - ${track.artists.join(", ")}`;
                 obj.tracks[index] = track;
             }
@@ -157,6 +161,10 @@ function getTracksHelper(attempts, obj, resolve, reject) {
         () => getTracksHelper(0, obj, resolve, reject),
         GET_TRACKS_SCROLL_TIMEOUT
     );
+}
+
+function normalize(str) {
+    return str.replaceAll("'", "").toLowerCase();
 }
 
 function setTargetIndex(obj) {
@@ -348,8 +356,9 @@ function getMaskElementById(mask, id) {
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
     return Promise.resolve()
-        .then(() => Object.assign(obj, { duration: 1000 }))
+        .then(() => Object.assign(obj, { durations: [1000, 2000] }))
         .then(() => {
+            getMaskElementById(obj.mask, "next").onclick = () => clickNext(obj);
             const playpause = getMaskElementById(obj.mask, "play_pause");
             const pause = getMaskElementById(obj.mask, "pause");
             pause.onclick = () => {
@@ -361,23 +370,23 @@ function fillMask(obj) {
             play.onclick = () => {
                 obj.video.currentTime = 0;
                 playpause.setAttribute("data-nextaction", "pause");
-                obj.video.play().then(() =>
+                obj.video.play().then(() => {
+                    const duration = obj.durations[obj.guesses];
                     setTimeout(() => {
                         setTimeout(
                             pause.onclick,
-                            obj.duration - 3 - obj.video.currentTime * 1000 // offset a bit
+                            duration - 3 - obj.video.currentTime * 1000 // offset a bit
                         );
-                    }, obj.duration - 200)
-                );
+                    }, duration - 200);
+                });
             };
             const dropdown = getMaskElementById(obj.mask, "dropdown");
             var inputT;
             obj.inputE.onkeyup = () => {
-                if (obj.inputE.value === inputT) return;
-                inputT = obj.inputE.value;
-                dropdown.replaceChildren(
-                    ...getDropdownChildren(inputT.toLowerCase(), obj)
-                );
+                const n = normalize(obj.inputE.value);
+                if (n === inputT) return;
+                inputT = n;
+                dropdown.replaceChildren(...getDropdownChildren(inputT, obj));
             };
             obj.mask.onkeyup = (e) => {
                 var selected = Array.from(dropdown.children).findIndex(
@@ -402,7 +411,6 @@ function fillMask(obj) {
                 if (!child) return;
                 child.onmouseenter();
             };
-            play.onclick();
             return obj;
         });
 }
@@ -413,12 +421,12 @@ function getDropdownChildren(value, obj) {
     return obj.tracks
         .filter(
             (track) =>
-            track.lowerTitle === value ||
-            (track.lowerTitle.includes(value) &&
+            track.normalizedTitle === value ||
+            (track.normalizedTitle.includes(value) &&
                 value.length >= DROPDOWN_MIN_LENGTH)
         )
-        .sort((a, b) => (a.lowerTitle > b.lowerTitle ? 1 : -1))
-        .sort((a, b) => (a.lowerTitle.startsWith(value) ? -1 : 1))
+        .sort((a, b) => (a.normalizedTitle > b.normalizedTitle ? 1 : -1))
+        .sort((a, b) => (a.normalizedTitle.startsWith(value) ? -1 : 1))
         .map((track, i) => {
             const div = document.createElement("div");
             div.setAttribute("index", track.index);
@@ -443,16 +451,39 @@ function getDropdownChildren(value, obj) {
 
 function clickDropdown(index, obj) {
     if (index === obj.targetIndex) {
-        obj.inputE.value = "";
-        obj.inputE.onkeyup();
-        updateHash(obj);
-        play(obj);
+        showAnswer(obj);
         return;
     }
     const chosen = obj.tracks[index];
     const desired = obj.tracks[obj.targetIndex];
-    const matching = chosen.artists.filter((a) => desired.artists.includes(a));
-    console.log("matching", matching);
+    const matching = chosen.artists.find((a) => desired.artists.includes(a));
+    submitGuess(chosen.displayName, matching !== undefined, obj);
+}
+
+function clickNext(obj) {
+    if (obj.guesses === -1) {
+        updateHash(obj);
+        play(obj);
+        return;
+    }
+    submitGuess("(skipped)", false, obj);
+}
+
+function submitGuess(str, isYellow, obj) {
+    const div = document.createElement("div");
+    div.innerText = str;
+    if (isYellow) div.classList.add("yellow");
+    getMaskElementById(obj.mask, "guesses").appendChild(div);
+    if (++obj.guesses === obj.durations.length) showAnswer(obj);
+}
+
+function showAnswer(obj) {
+    obj.inputE.value = "";
+    obj.inputE.onkeyup();
+    obj.guesses = -1;
+    const next = getMaskElementById(obj.mask, "next");
+    next.innerText = "(next song)";
+    // todo dcep93
 }
 
 function updateHash(obj) {
@@ -473,6 +504,7 @@ function updateHash(obj) {
 
 function ensureLoaded(obj) {
     console.log("ensureLoaded", (Date.now() - obj.start) / 1000);
+    const prevVolume = obj.video.volume;
     obj.video.volume = 0;
     obj.video.pause();
     obj.button.click();
@@ -480,10 +512,9 @@ function ensureLoaded(obj) {
             ensureLoadedHelper(0, obj, resolve, reject)
         )
         .then(() => obj.video.pause())
-        .then(() => (obj.video.volume = 1))
+        .then(() => (obj.video.volume = prevVolume))
         .then(() => console.log(obj.tracks[obj.targetIndex]))
-        .then(() => obj)
-        .then(updateRender);
+        .then(() => obj);
 }
 
 function ensureLoadedHelper(attempts, obj, resolve, reject) {
@@ -495,11 +526,20 @@ function ensureLoadedHelper(attempts, obj, resolve, reject) {
     );
 }
 
-function updateRender(obj) {
+function postLoaded(obj) {
     const link = getMaskElementById(obj.mask, "link");
     link.innerText = location.href;
     link.href = location.href;
+    getMaskElementById(obj.mask, "guesses").replaceChildren();
+    obj.guesses = 0;
+    setNextText(obj);
+    getMaskElementById(obj.mask, "play").onclick();
     return obj;
+}
+
+function setNextText(obj) {
+    const next = getMaskElementById(obj.mask, "next");
+    next.innerText = "(skip)";
 }
 
 function finish(obj) {

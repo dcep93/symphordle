@@ -8,16 +8,16 @@
         font-family: "Courier New", Courier, monospace;
     }
     
+    #symphordle_mask .hover:hover {
+        cursor: pointer;
+    }
+    
     #symphordle_mask .show_first>*:not(:first-child) {
         display: none;
     }
     
     #symphordle_mask #play_pause {
         display: inline-block;
-    }
-    
-    #symphordle_mask #close:hover {
-        cursor: pointer;
     }
     
     #symphordle_mask #play_pause[data-nextaction="play"]>#pause {
@@ -37,12 +37,12 @@
         overflow: scroll;
     }
     
-    #symphordle_mask #dropdown>*:hover {
-        cursor: pointer;
-    }
-    
     #symphordle_mask #dropdown>*[selected="true"] {
         background-color: #333;
+    }
+    
+    #symphordle_mask .yellow {
+        background-color: goldenrod;
     }
 </style>
 <div>
@@ -50,7 +50,7 @@
     <div class="show_first">
         <div id="loading">loading...</div>
         <div>
-            <div id="close">close</div>
+            <div id="close" class="hover">close</div>
             <div id="link"></div>
             <div id="play_pause" data-nextaction="play">
                 <div id="play">
@@ -84,9 +84,11 @@
           </button>
                 </div>
             </div>
+            <div id="guesses"></div>
+            <div id="next" class="hover"></div>
             <div>
                 <input id="input" type="text" size="50" autocomplete="off" />
-                <div id="dropdown"></div>
+                <div id="dropdown" class="hover"></div>
             </div>
         </div>
     </div>
