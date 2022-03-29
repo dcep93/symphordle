@@ -361,12 +361,16 @@ function getMaskElementById(mask, id, cb) {
     return e;
 }
 
+function getSettings() {
+    return { next_delay: 2000, durations: [1000, 2000] }; // todo dcep93
+}
+
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
     return Promise.resolve()
         .then(() =>
             Object.assign(obj, {
-                settings: { next_delay: 2000, durations: [1000, 2000] },
+                settings: getSettings(),
             })
         )
         .then(() => {
@@ -413,9 +417,9 @@ function fillMask(obj) {
                         selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
                 } else if (e.key === "Enter") {
                     selected = selected === -1 ? 0 : selected;
-                    const index = parseInt(
-                        dropdown.children[selected].getAttribute("index")
-                    );
+                    const s = dropdown.children[selected];
+                    if (!s) return submitGuess("(skipped)", false, obj);
+                    const index = parseInt(s.getAttribute("index"));
                     clickDropdown(index, obj);
                 } else {
                     return;
