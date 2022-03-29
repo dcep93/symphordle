@@ -17,11 +17,9 @@ function main() {
         .then(getDivs)
         .then(getTracks)
         .then(play)
+        .then(fillMask)
         .then(finish)
-        .catch((err) => {
-            removeMask();
-            throw err;
-        });
+        .catch(removeMask);
 }
 
 function play(obj) {
@@ -29,11 +27,7 @@ function play(obj) {
         .then(setTargetIndex)
         .then(scrollUntilShowing)
         .then(ensureLoaded)
-        .then(fillMask)
-        .catch((err) => {
-            removeMask();
-            throw err;
-        });
+        .catch(removeMask);
 }
 
 function getDivs(obj) {
@@ -66,9 +60,10 @@ function getTracklistDiv() {
         );
 }
 
-function removeMask() {
+function removeMask(err) {
     const oldMask = document.getElementById(MASK_ID);
     if (oldMask) oldMask.remove();
+    if (err) throw err;
 }
 
 function getMask() {
@@ -347,7 +342,6 @@ function getMaskElementById(mask, id) {
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
-    console.log(obj.tracks[obj.targetIndex]);
     return Promise.resolve(obj)
         .then((obj) => ({...obj, duration: 1000 }))
         .then((obj) => {
@@ -482,6 +476,7 @@ function ensureLoaded(obj) {
         )
         .then(() => obj.video.pause())
         .then(() => (obj.video.volume = 1))
+        .then(() => console.log(obj.tracks[obj.targetIndex]))
         .then(() => obj);
 }
 
