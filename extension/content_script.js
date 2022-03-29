@@ -16,8 +16,17 @@ function main() {
     Promise.resolve({ start: Date.now() })
         .then(getDivs)
         .then(getTracks)
-        .then(prepareMask)
+        .then(play)
         .then(finish)
+        .catch((err) => {
+            removeMask();
+            throw err;
+        });
+}
+
+function play(obj) {
+    return Promise.resolve(obj)
+        .then(prepareMask)
         .catch((err) => {
             removeMask();
             throw err;
@@ -129,14 +138,35 @@ function getTracksHelper(attempts, obj, resolve, reject) {
 
 function prepareMask(obj) {
     console.log("prepareMask", (Date.now() - obj.start) / 1000);
+    if (!location.hash.substring(1))
+        location.hash = new Date().toLocaleDateString();
     return Promise.resolve(obj)
         .then((obj) => ({
             ...obj,
-            targetIndex: Math.floor(obj.tracks.length * Math.random()),
+            targetIndex: Math.floor(
+                obj.tracks.length * random(location.hash + obj.seed)
+            ),
         }))
         .then(scrollUntilShowing)
         .then(ensureLoaded)
         .then(fillMask);
+}
+
+function hashCode(str) {
+    var hash = 0,
+        i,
+        chr;
+    if (str.length === 0) return hash;
+    for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+}
+
+function random(str) {
+    return Math.abs(hashCode(str)) / Math.pow(2, 31);
 }
 
 function scrollUntilShowing(obj) {
@@ -170,6 +200,7 @@ function getMaskElementById(mask, id) {
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
+    console.log(obj.tracks[obj.targetIndex]);
     return Promise.resolve(obj)
         .then((obj) => ({...obj, duration: 1000 }))
         .then((obj) => {
@@ -180,7 +211,8 @@ function fillMask(obj) {
                 obj.video.pause();
                 console.log(obj.video.currentTime);
             };
-            getMaskElementById(obj.mask, "play").onclick = () => {
+            const play = getMaskElementById(obj.mask, "play");
+            play.onclick = () => {
                 obj.video.currentTime = 0;
                 playpause.setAttribute("data-nextaction", "pause");
                 obj.video
@@ -193,6 +225,7 @@ function fillMask(obj) {
                     ...getDropdownChildren(inputE.value.toLowerCase(), obj)
                 );
             };
+            play.onclick();
             return obj;
         });
 }
@@ -217,7 +250,25 @@ function getDropdownChildren(value, obj) {
 }
 
 function clickDropdown(index, obj) {
-    console.log(index);
+    console.log(index, obj.targetIndex);
+    updateHash(obj);
+    play(obj);
+}
+
+function updateHash(obj) {
+    const hashParts = location.hash.substring(1).split("-");
+    if (hashParts.length == 1) {
+        hashParts.push(0);
+    }
+    if (hashParts.length === 2) {
+        if (!isNaN(hashParts[1]++)) {
+            if (!isNaN(new Date(hashParts[0]))) {
+                location.hash = hashParts.join("-");
+                return;
+            }
+        }
+    }
+    obj.seed = (obj.seed || 0) + 1;
 }
 
 function ensureLoaded(obj) {
@@ -248,7 +299,6 @@ function finish(obj) {
     obj.mask.style.zIndex = 0;
     getMaskElementById(obj.mask, "close").onclick = () => obj.mask.remove();
     getMaskElementById(obj.mask, "loading").remove();
-    console.log(obj.tracks[obj.targetIndex]);
 }
 
 main();
