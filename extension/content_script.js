@@ -85,8 +85,15 @@ function getTracks(obj) {
     const spacing = obj.viewport.getElementsByClassName("contentSpacing")[0];
     obj.viewport.scrollTo({ top: spacing.offsetHeight });
     return new Promise((resolve, reject) =>
-        getTracksHelper(-5, obj, resolve, reject)
-    ).then((obj) => obj.viewport.scrollTo({ top: 0 }) || obj);
+            getTracksHelper(-5, obj, resolve, reject)
+        )
+        .then((obj) => ({
+            ...obj,
+            tracks: Object.values(
+                Object.fromEntries(obj.tracks.map((t) => [t.displayName, t]))
+            ),
+        }))
+        .then((obj) => obj.viewport.scrollTo({ top: 0 }) || obj);
 }
 
 function getTracksHelper(attempts, obj, resolve, reject) {
@@ -105,16 +112,19 @@ function getTracksHelper(attempts, obj, resolve, reject) {
             }
             loading = false;
             if (obj.tracks[index] === undefined) {
-                const track = child.children[1].children[1];
-                obj.tracks.push({
+                const trackE = child.children[1].children[1];
+                const track = {
                     index,
                     scroll: top,
                     img: child.children[1].children[0].src,
-                    title: track.children[0].innerText,
+                    title: trackE.children[0].innerText,
                     artists: Array.from(
-                        track.children[track.children.length - 1].children
+                        trackE.children[trackE.children.length - 1].children
                     ).map((artist) => artist.innerText),
-                });
+                };
+                track.lowerTitle = track.title.toLowerCase();
+                track.displayName = `${track.title} - ${track.artists.join(", ")}`;
+                obj.tracks[index] = track;
             }
         });
     if (loading)
@@ -232,7 +242,6 @@ function fillMask(obj) {
 
 function getDropdownChildren(value, obj) {
     return obj.tracks
-        .map((track) => ({...track, lowerTitle: track.title.toLowerCase() }))
         .filter(
             (track) =>
             track.lowerTitle === value ||
@@ -243,7 +252,7 @@ function getDropdownChildren(value, obj) {
         .sort((a, b) => (a.lowerTitle.startsWith(value) ? -1 : 1))
         .map((track) => {
             const div = document.createElement("div");
-            div.innerText = `${track.title} - ${track.artists.join(", ")}`;
+            div.innerText = track.displayName;
             div.onclick = () => clickDropdown(track.index, obj);
             return div;
         });
