@@ -48,6 +48,7 @@ function getDivs(obj) {
                 .getElementsByClassName("os-viewport")[0],
             main: document.getElementById("main"),
             video: document.getElementsByTagName("video")[0],
+            inputE: getMaskElementById(obj.mask, "input"),
         }));
 }
 
@@ -356,7 +357,7 @@ function fillMask(obj) {
             pause.onclick = () => {
                 playpause.setAttribute("data-nextaction", "play");
                 obj.video.pause();
-                console.log(obj.video.currentTime);
+                console.log("played time", obj.video.currentTime);
             };
             const play = getMaskElementById(obj.mask, "play");
             play.onclick = () => {
@@ -366,11 +367,34 @@ function fillMask(obj) {
                     .play()
                     .then(() => setTimeout(pause.onclick, obj.duration + 50));
             };
-            const inputE = getMaskElementById(obj.mask, "input");
-            inputE.onkeyup = () => {
-                getMaskElementById(obj.mask, "dropdown").replaceChildren(
-                    ...getDropdownChildren(inputE.value.toLowerCase(), obj)
+            const dropdown = getMaskElementById(obj.mask, "dropdown");
+            var inputT;
+            obj.inputE.onkeyup = () => {
+                if (obj.inputE.value === inputT) return;
+                inputT = obj.inputE.value;
+                dropdown.replaceChildren(
+                    ...getDropdownChildren(inputT.toLowerCase(), obj)
                 );
+            };
+            obj.mask.onkeyup = (e) => {
+                var selected = Array.from(dropdown.children).findIndex(
+                    (c) => c.getAttribute("selected") !== null
+                );
+                if (e.key === "ArrowUp") {
+                    selected =
+                        selected <= 0 ? dropdown.children.length - 1 : selected - 1;
+                } else if (e.key === "ArrowDown") {
+                    selected =
+                        selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
+                } else if (e.key === "Enter") {
+                    selected = selected === -1 ? 0 : selected;
+                    clickDropdown(selected, obj);
+                } else {
+                    return;
+                }
+                const child = dropdown.children[selected];
+                if (!child) return;
+                child.onmouseenter();
             };
             play.onclick();
             return obj;
@@ -378,6 +402,8 @@ function fillMask(obj) {
 }
 
 function getDropdownChildren(value, obj) {
+    var selected = null;
+    var allowed = false;
     return obj.tracks
         .filter(
             (track) =>
@@ -391,6 +417,19 @@ function getDropdownChildren(value, obj) {
             const div = document.createElement("div");
             div.innerText = track.displayName;
             div.onclick = () => clickDropdown(track.index, obj);
+            div.onmouseenter = (e) => {
+                if (e) {
+                    if (!allowed) {
+                        allowed = true;
+                        return;
+                    }
+                } else {
+                    allowed = false;
+                }
+                if (selected) selected.removeAttribute("selected");
+                selected = div;
+                div.setAttribute("selected", "true");
+            };
             return div;
         });
 }
