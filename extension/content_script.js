@@ -392,7 +392,10 @@ function fillMask(obj) {
                         selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
                 } else if (e.key === "Enter") {
                     selected = selected === -1 ? 0 : selected;
-                    clickDropdown(dropdown.children[selected].getAttribute("index"), obj);
+                    const index = parseInt(
+                        dropdown.children[selected].getAttribute("index")
+                    );
+                    clickDropdown(index, obj);
                 } else {
                     return;
                 }
@@ -440,9 +443,17 @@ function getDropdownChildren(value, obj) {
 }
 
 function clickDropdown(index, obj) {
-    console.log("clickDropdown", index, obj.targetIndex);
-    updateHash(obj);
-    play(obj);
+    if (index === obj.targetIndex) {
+        obj.inputE.value = "";
+        obj.inputE.onkeyup();
+        updateHash(obj);
+        play(obj);
+        return;
+    }
+    const chosen = obj.tracks[index];
+    const desired = obj.tracks[obj.targetIndex];
+    const matching = chosen.artists.filter((a) => desired.artists.includes(a));
+    console.log("matching", matching);
 }
 
 function updateHash(obj) {
