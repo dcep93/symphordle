@@ -103,6 +103,7 @@ function getTracks(obj) {
         .then((obj) => obj.viewport.scrollTo({ top: 0 }) || obj);
 }
 
+// todo dcep93
 function getTracksHelper(attempts, obj, resolve, reject) {
     if (attempts > GET_TRACKS_MAX_ATTEMPTS) return reject("too many attempts");
     const top = obj.viewport.scrollTop;
