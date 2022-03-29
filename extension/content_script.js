@@ -26,7 +26,10 @@ function main() {
 
 function play(obj) {
     return Promise.resolve(obj)
-        .then(prepareMask)
+        .then(setTargetIndex)
+        .then(scrollUntilShowing)
+        .then(ensureLoaded)
+        .then(fillMask)
         .catch((err) => {
             removeMask();
             throw err;
@@ -157,20 +160,16 @@ function getTracksHelper(attempts, obj, resolve, reject) {
     );
 }
 
-function prepareMask(obj) {
-    console.log("prepareMask", (Date.now() - obj.start) / 1000);
+function setTargetIndex(obj) {
+    console.log("setTargetIndex", (Date.now() - obj.start) / 1000);
     if (!location.hash.substring(1))
         location.hash = new Date().toLocaleDateString();
-    return Promise.resolve(obj)
-        .then((obj) => ({
-            ...obj,
-            targetIndex: Math.floor(
-                obj.tracks.length * random(location.hash + obj.seed)
-            ),
-        }))
-        .then(scrollUntilShowing)
-        .then(ensureLoaded)
-        .then(fillMask);
+    return Promise.resolve(obj).then((obj) => ({
+        ...obj,
+        targetIndex: Math.floor(
+            obj.tracks.length * random(location.hash + obj.seed)
+        ),
+    }));
 }
 
 function md5(inputString) {
@@ -363,9 +362,14 @@ function fillMask(obj) {
             play.onclick = () => {
                 obj.video.currentTime = 0;
                 playpause.setAttribute("data-nextaction", "pause");
-                obj.video
-                    .play()
-                    .then(() => setTimeout(pause.onclick, obj.duration + 50));
+                obj.video.play().then(() =>
+                    setTimeout(() => {
+                        setTimeout(
+                            pause.onclick,
+                            obj.duration - 3 - obj.video.currentTime * 1000 // offset a bit
+                        );
+                    }, obj.duration - 200)
+                );
             };
             const dropdown = getMaskElementById(obj.mask, "dropdown");
             var inputT;
@@ -388,7 +392,7 @@ function fillMask(obj) {
                         selected === -1 ? 0 : (selected + 1) % dropdown.children.length;
                 } else if (e.key === "Enter") {
                     selected = selected === -1 ? 0 : selected;
-                    clickDropdown(selected, obj);
+                    clickDropdown(dropdown.children[selected].getAttribute("index"), obj);
                 } else {
                     return;
                 }
@@ -413,8 +417,9 @@ function getDropdownChildren(value, obj) {
         )
         .sort((a, b) => (a.lowerTitle > b.lowerTitle ? 1 : -1))
         .sort((a, b) => (a.lowerTitle.startsWith(value) ? -1 : 1))
-        .map((track) => {
+        .map((track, i) => {
             const div = document.createElement("div");
+            div.setAttribute("index", track.index);
             div.innerText = track.displayName;
             div.onclick = () => clickDropdown(track.index, obj);
             div.onmouseenter = (e) => {
@@ -435,7 +440,7 @@ function getDropdownChildren(value, obj) {
 }
 
 function clickDropdown(index, obj) {
-    console.log(index, obj.targetIndex);
+    console.log("clickDropdown", index, obj.targetIndex);
     updateHash(obj);
     play(obj);
 }
