@@ -131,7 +131,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
             if (obj.tracks[index] === undefined) {
                 const trackE = child.children[1].children[1];
                 const track = {
-                    index,
+                    index: index + 1,
                     scroll: top,
                     img: child.children[1].children[0].src.split("4851").join("b273"),
                     title: trackE.children[0].innerText,
@@ -351,8 +351,9 @@ function scrollUntilShowingHelper(attempts, obj, resolve, reject) {
     const track = Array.from(obj.rows.children)
         .map((child) => child.children[0])
         .find((child) => {
-            const index = parseInt(child.children[0].innerText) - 1;
-            return index === obj.targetIndex;
+            const index = parseInt(child.children[0].innerText);
+            const answer = obj.tracks[obj.targetIndex];
+            return index === answer.index;
         });
     if (track === undefined)
         return setTimeout(() =>
@@ -383,7 +384,6 @@ function setSettings(obj) {
 
 function updateSettings(obj) {
     chrome.storage.sync.set({ settings: obj.settings });
-    console.log(obj.settings);
     renderSettings(obj);
 }
 
@@ -486,8 +486,7 @@ function fillMask(obj) {
                 selected = selected === -1 ? 0 : selected;
                 const s = dropdown.children[selected];
                 if (!s) return submitGuess("(skipped)", false, obj);
-                const index = parseInt(s.getAttribute("index"));
-                clickDropdown(index, obj);
+                s.onclick();
             } else {
                 return;
             }
@@ -513,9 +512,8 @@ function getDropdownChildren(value, obj) {
         .sort((a, b) => (a.normalizedTitle.startsWith(value) ? -1 : 1))
         .map((track, i) => {
             const div = document.createElement("div");
-            div.setAttribute("index", track.index);
             div.innerText = track.displayName;
-            div.onclick = () => clickDropdown(track.index, obj);
+            div.onclick = () => clickDropdown(track, obj);
             div.onmouseenter = (e) => {
                 if (e) {
                     if (!allowed) {
@@ -533,15 +531,14 @@ function getDropdownChildren(value, obj) {
         });
 }
 
-function clickDropdown(index, obj) {
-    if (index === obj.targetIndex) {
+function clickDropdown(chosen, obj) {
+    const desired = obj.tracks[obj.targetIndex];
+    if (chosen.index === desired.index) {
         obj.inputE.value = "";
         obj.inputE.oninput();
         showAnswer(obj);
         return;
     }
-    const chosen = obj.tracks[index];
-    const desired = obj.tracks[obj.targetIndex];
     const matching = chosen.artists.find((a) => desired.artists.includes(a));
     submitGuess(chosen.displayName, matching !== undefined, obj);
 }
