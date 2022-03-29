@@ -164,7 +164,10 @@ function getTracksHelper(attempts, obj, resolve, reject) {
 }
 
 function normalize(str) {
-    return str.replaceAll("'", "").toLowerCase();
+    ["'", '"', "."].forEach((r) => {
+        str = str.replaceAll(r, "");
+    });
+    return str.toLowerCase();
 }
 
 function setTargetIndex(obj) {
@@ -352,8 +355,10 @@ function scrollUntilShowingHelper(attempts, obj, resolve, reject) {
     resolve(obj);
 }
 
-function getMaskElementById(mask, id) {
-    return Array.from(mask.getElementsByTagName("*")).find((e) => e.id === id);
+function getMaskElementById(mask, id, cb) {
+    const e = Array.from(mask.getElementsByTagName("*")).find((e) => e.id === id);
+    if (cb) cb(e);
+    return e;
 }
 
 function fillMask(obj) {
@@ -504,7 +509,13 @@ function showAnswer(obj) {
         obj.video.currentTime = 0;
         obj.video.play();
     }
-    // todo dcep93
+    const answer = obj.tracks[obj.targetIndex];
+    getMaskElementById(
+        obj.mask,
+        "answer_text",
+        (e) => (e.innerText = answer.displayName)
+    );
+    getMaskElementById(obj.mask, "answer_img", (e) => (e.src = answer.img));
 }
 
 function updateHash(obj) {
@@ -552,6 +563,8 @@ function postLoaded(obj) {
     obj.guesses = 0;
     obj.finished = false;
     setNextText(obj);
+    getMaskElementById(obj.mask, "answer_text", (e) => (e.innerText = ""));
+    getMaskElementById(obj.mask, "answer_img", (e) => (e.src = ""));
     getMaskElementById(obj.mask, "play").onclick();
     return obj;
 }
