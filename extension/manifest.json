@@ -11,7 +11,7 @@
     "background": { "service_worker": "background.js" },
     "content_scripts": [{
         "matches": ["https://open.spotify.com/playlist/**"],
-        "js": ["dummy.js"]
+        "js": ["content_script.js"]
     }],
     "action": {
         "default_icon": "favicon.png"

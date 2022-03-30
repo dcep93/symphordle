@@ -13,6 +13,7 @@ var ENSURE_LOADED_MAX_ATTEMPTS = 1000;
 var ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT = 10;
 
 function main() {
+    console.log("symphordle");
     Promise.resolve({ start: Date.now() })
         .then(getDivs)
         .then(getTracks)
@@ -662,5 +663,5 @@ function finish(obj) {
     return obj;
 }
 
-main();
+if (location.hash !== "") document.addEventListener("DOMContentLoaded", main);
 chrome.runtime.onMessage.addListener(main);

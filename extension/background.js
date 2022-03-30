@@ -11,8 +11,5 @@ fetch(chrome.runtime.getURL("manifest.json"))
     .then(() => console.log("version", version));
 
 chrome.action.onClicked.addListener((tab) =>
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ["content_script.js"],
-    })
+    chrome.tabs.sendMessage(tab.id, null)
 );
