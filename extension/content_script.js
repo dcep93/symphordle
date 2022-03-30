@@ -466,8 +466,8 @@ function fillMask(obj) {
         const play = getMaskElementById(obj.mask, "play");
         play.onclick = () => {
             obj.video.currentTime = 0;
-            playpause.setAttribute("data-nextaction", "pause");
             obj.video.play().then(() => {
+                playpause.setAttribute("data-nextaction", "pause");
                 const duration = 1000 * obj.settings.durations[obj.guesses];
                 setTimeout(() => {
                     setTimeout(
