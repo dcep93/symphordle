@@ -86,7 +86,7 @@ function getMask() {
 
 function getTracks(obj) {
     console.log("getTracks", (Date.now() - obj.start) / 1000);
-    obj.main.style.opacity = 0;
+    obj.main.style.opacity = 0.5;
     obj.rowCount = parseInt(obj.tracklistDiv.getAttribute("aria-rowcount")) - 1;
     const spacing = obj.viewport.getElementsByClassName("contentSpacing")[0];
     obj.viewport.scrollTo({ top: spacing.offsetHeight });
@@ -613,10 +613,12 @@ function ensureLoaded(obj) {
     return new Promise((resolve, reject) =>
             ensureLoadedHelper(0, obj, resolve, reject)
         )
-        .then(() => obj.video.pause())
-        .then(() => (obj.video.volume = prevVolume))
-        .then(() => (obj.video.currentTime = 0))
-        .then(() => console.log(obj.tracks[obj.targetIndex]))
+        .then(() => {
+            obj.video.pause();
+            obj.video.volume = prevVolume;
+            obj.video.currentTime = 0;
+            console.log(obj.tracks[obj.targetIndex]);
+        })
         .then(() => obj);
 }
 
