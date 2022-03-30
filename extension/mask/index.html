@@ -90,6 +90,10 @@
     
     #answer_subdiv {
         float: right;
+        display: inline-flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
     }
     
     .relative {
@@ -106,6 +110,11 @@
     #left {
         display: flex;
         flex-direction: column;
+    }
+    
+    #answer_img {
+        max-height: 100%;
+        max-width: 50%;
     }
 </style>
 <div id="container">
@@ -194,7 +203,7 @@
                 <div>
                     <div id="answer_subdiv">
                         <div id="answer_text"></div>
-                        <img id="answer_img" src="" />
+                        <img id="answer_img" class="grow" src="" />
                     </div>
                 </div>
             </div>

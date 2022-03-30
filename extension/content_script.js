@@ -4,6 +4,7 @@ function log(arg) {
 }
 
 var MASK_ID = "symphordle_mask";
+var WAIT_FOR_DOM_TIMEOUT = 100;
 var DROPDOWN_MIN_LENGTH = 3;
 var GET_TRACKS_MAX_ATTEMPTS = 200;
 var GET_TRACKS_WAIT_FOR_VISIBILITY_TIMEOUT = 10;
@@ -22,6 +23,13 @@ function main() {
         .then(finish)
         .catch((err) => removeMask(err, obj))
         .then(play);
+}
+
+function waitForDom(f) {
+    getTracklistDiv().then((div) => {
+        if (div) return f();
+        setTimeout(() => waitForDom(f), WAIT_FOR_DOM_TIMEOUT);
+    });
 }
 
 function play(obj) {
@@ -667,5 +675,5 @@ function finish(obj) {
     return obj;
 }
 
-if (location.hash !== "") document.addEventListener("DOMContentLoaded", main);
+if (location.hash !== "") waitForDom(main);
 chrome.runtime.onMessage.addListener(main);
