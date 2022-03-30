@@ -14,12 +14,13 @@ var ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT = 10;
 
 function main() {
     console.log("symphordle");
-    Promise.resolve({ start: Date.now() })
+    const obj = { start: Date.now() };
+    Promise.resolve(obj)
         .then(getDivs)
         .then(getTracks)
         .then(fillMask)
         .then(finish)
-        .catch(removeMask)
+        .catch((err) => removeMask(err, obj))
         .then(play);
 }
 
@@ -29,7 +30,7 @@ function play(obj) {
         .then(scrollUntilShowing)
         .then(ensureLoaded)
         .then(postLoaded)
-        .catch(removeMask);
+        .catch((err) => removeMask(err, obj));
 }
 
 function getDivs(obj) {
@@ -65,11 +66,12 @@ function getTracklistDiv() {
         );
 }
 
-function removeMask(err) {
+function removeMask(err, obj) {
     const oldMask = document.getElementById(MASK_ID);
     if (oldMask) oldMask.remove();
     if (err) {
         document.getElementById("main").style.opacity = 1;
+        console.log(obj);
         throw err;
     }
 }
@@ -105,7 +107,8 @@ function getTracks(obj) {
 }
 
 function getTracksHelper(attempts, obj, resolve, reject) {
-    if (attempts > GET_TRACKS_MAX_ATTEMPTS) return reject("too many attempts");
+    if (attempts > GET_TRACKS_MAX_ATTEMPTS)
+        return reject("too many attempts getTracksHelper");
     const top = obj.viewport.scrollTop;
     var loading = true;
     var scrolledBack = false;
@@ -345,7 +348,7 @@ function scrollUntilShowing(obj) {
 
 function scrollUntilShowingHelper(attempts, obj, resolve, reject) {
     if (attempts > SCROLL_UNTIL_SHOWING_MAX_ATTEMPTS)
-        return reject("too many attempts");
+        return reject("too many attempts scrollUntilShowingHelper");
     const track = Array.from(obj.rows.children)
         .map((child) => child.children[0])
         .find((child) => {
@@ -624,7 +627,8 @@ function ensureLoaded(obj) {
 
 function ensureLoadedHelper(attempts, obj, resolve, reject) {
     if (!obj.video.paused) return resolve(obj);
-    if (attempts > ENSURE_LOADED_MAX_ATTEMPTS) return reject("too many attempts");
+    if (attempts > ENSURE_LOADED_MAX_ATTEMPTS)
+        return reject("too many attempts ensureLoadedHelper");
     return setTimeout(
         () => ensureLoadedHelper(++attempts, obj, resolve, reject),
         ENSURE_LOADED_WAIT_FOR_LOADED_TIMEOUT

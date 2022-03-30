@@ -30,13 +30,8 @@
     }
     
     #play_pause {
+        padding: 30px;
         display: inline-block;
-        text-align: center;
-    }
-    
-    #play_pause>* {
-        display: inline-block;
-        transform: translate(-50%, 0);
     }
     
     #play_pause[data-nextaction="play"]>#pause {
@@ -47,13 +42,17 @@
         display: none;
     }
     
+    #close {
+        display: inline-block;
+    }
+    
     input {
         color: black;
     }
     
-    #dropdown {
-        max-height: 25em;
-        overflow: scroll;
+    .hanging_parent>* {
+        padding-left: 22px;
+        text-indent: -20px;
     }
     
     #dropdown>*[selected="true"] {
@@ -80,7 +79,6 @@
     }
     
     #controls_div {
-        width: 25%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -88,15 +86,26 @@
     
     #answer_div {
         width: 700px;
+    }
+    
+    #answer_subdiv {
+        float: right;
+    }
+    
+    .relative {
         position: relative;
     }
     
-    #answer_div>* {
+    .relative>* {
         position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: scroll;
     }
     
-    #guesses {
-        height: 10em;
+    #left {
+        display: flex;
+        flex-direction: column;
     }
 </style>
 <div id="container">
@@ -104,81 +113,89 @@
     <div class="show_first grow">
         <div id="loading">loading <span id="loading_percent">0</span>%</div>
         <div id="symphordle">
-            <div id="controls_div">
-                <div id="close" class="hover">close</div>
-                <div id="play_pause" data-nextaction="play">
-                    <span id="play">
-            <button
-              class="A8NeSZBojOQuVvK4l1pS"
-              aria-label="Play"
-              data-testid="control-button-playpause"
-              style="--button-size: 32px"
-              aria-expanded="false"
-            >
-              <svg
-                role="img"
-                height="16"
-                width="16"
-                viewBox="0 0 16 16"
-                class="Svg-sc-1bi12j5-0 hDgDGI"
-              >
-                <path
-                  d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"
-                ></path>
-              </svg>
-            </button>
-          </span>
-                    <span id="pause">
-            <button
-              class="A8NeSZBojOQuVvK4l1pS"
-              aria-label="Pause"
-              data-testid="control-button-playpause"
-              style="--button-size: 32px"
-              aria-expanded="false"
-            >
-              <svg
-                role="img"
-                height="16"
-                width="16"
-                viewBox="0 0 16 16"
-                class="Svg-sc-1bi12j5-0 hDgDGI"
-              >
-                <path
-                  d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z"
-                ></path>
-              </svg>
-            </button>
-          </span>
-                </div>
+            <div id="left" class="grow">
                 <div>
-                    <h2>settings</h2>
-                    <div>
-                        <span>delay between rounds:</span>
-                        <input id="next_delay" type="number" style="width: 5em" autocomplete="off" />
+                    <input type="button" id="close" class="hover" value="close" />
+                    <div id="play_pause" data-nextaction="play">
+                        <span id="play">
+              <button
+                class="A8NeSZBojOQuVvK4l1pS"
+                aria-label="Play"
+                data-testid="control-button-playpause"
+                style="--button-size: 32px"
+                aria-expanded="false"
+              >
+                <svg
+                  role="img"
+                  height="16"
+                  width="16"
+                  viewBox="0 0 16 16"
+                  class="Svg-sc-1bi12j5-0 hDgDGI"
+                >
+                  <path
+                    d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"
+                  ></path>
+                </svg>
+              </button>
+            </span>
+                        <span id="pause">
+              <button
+                class="A8NeSZBojOQuVvK4l1pS"
+                aria-label="Pause"
+                data-testid="control-button-playpause"
+                style="--button-size: 32px"
+                aria-expanded="false"
+              >
+                <svg
+                  role="img"
+                  height="16"
+                  width="16"
+                  viewBox="0 0 16 16"
+                  class="Svg-sc-1bi12j5-0 hDgDGI"
+                >
+                  <path
+                    d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z"
+                  ></path>
+                </svg>
+              </button>
+            </span>
                     </div>
+                </div>
+                <div id="guesses_div" class="grow relative">
                     <div>
-                        <h3>round durations</h3>
-                        <div id="round_durations"></div>
-                        <input id="add_round" type="button" value="add round" />
+                        <div>
+                            <div id="guesses" class="hanging_parent"></div>
+                            <div id="next" class="hover">.</div>
+                        </div>
+                        <div>
+                            <div>
+                                <input id="input" type="text" size="50" autocomplete="off" /> &nbsp;
+                            </div>
+                            <div id="dropdown" class="hanging_parent hover"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="controls_div">
+                    <div>
+                        <h2>settings</h2>
+                        <div>
+                            <span>delay between rounds:</span>
+                            <input id="next_delay" type="number" style="width: 5em" autocomplete="off" />
+                        </div>
+                        <div>
+                            <h3>round durations</h3>
+                            <div id="round_durations"></div>
+                            <input id="add_round" class="hover" type="button" value="add round" />
+                        </div>
                     </div>
                 </div>
             </div>
-            <div id="guesses_div" class="grow">
+            <div id="answer_div" class="relative">
                 <div>
-                    <div id="guesses"></div>
-                    <div id="next" class="hover">.</div>
-                </div>
-                <div>
-                    <div>
-                        <input id="input" type="text" size="50" autocomplete="off" /> &nbsp;
+                    <div id="answer_subdiv">
+                        <div id="answer_text"></div>
+                        <img id="answer_img" src="" />
                     </div>
-                    <div id="dropdown" class="hover"></div>
-                </div>
-            </div>
-            <div id="answer_div">
-                <div>
-                    <div id="answer_text"></div>
-                    <img id="answer_img" src="" />
                 </div>
             </div>
         </div>
