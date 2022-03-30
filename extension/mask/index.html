@@ -86,10 +86,6 @@
     
     #answer_div {
         width: 700px;
-    }
-    
-    #answer_subdiv {
-        float: right;
         display: inline-flex;
         flex-direction: column;
         height: 100%;
@@ -113,6 +109,15 @@
     
     #answer_img {
         max-height: 100%;
+    }
+    
+    #guesses {
+        height: 6em;
+        overflow: scroll;
+    }
+    
+    .overflow_hidden {
+        overflow: visible !important;
     }
 </style>
 <div id="container">
@@ -197,11 +202,11 @@
                     </div>
                 </div>
             </div>
-            <div id="answer_div" class="relative">
-                <div>
-                    <div id="answer_subdiv">
-                        <div id="answer_text"></div>
-                        <img id="answer_img" class="grow" src="" />
+            <div id="answer_div">
+                <div id="answer_text"></div>
+                <div class="grow relative">
+                    <div class="overflow_hidden">
+                        <img id="answer_img" src="" />
                     </div>
                 </div>
             </div>

@@ -97,7 +97,7 @@ function getMask() {
 
 function getTracks(obj) {
     console.log("getTracks", (Date.now() - obj.start) / 1000);
-    obj.main.style.opacity = 0.3;
+    obj.main.style.opacity = 0.1;
     obj.rowCount = parseInt(obj.tracklistDiv.getAttribute("aria-rowcount")) - 1;
     const spacing = obj.viewport.getElementsByClassName("contentSpacing")[0];
     obj.viewport.scrollTo({ top: spacing.offsetHeight });
@@ -130,10 +130,11 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                 if (index !== 0) return;
                 obj.tracks = [];
             }
-            if (index !== 0 && !obj.tracks[index - 1]) {
+            if (index > obj.tracks.length) {
                 if (!scrolledBack) {
+                    console.log("scrollBack", index, obj.tracks.length, top);
                     obj.viewport.scrollTo({
-                        top: top - obj.viewport.offsetHeight / 2,
+                        top: top - obj.viewport.offsetHeight * 1.5,
                     });
                     scrolledBack = true;
                 }
@@ -463,14 +464,16 @@ function fillMask(obj) {
             console.log("played time", obj.video.currentTime);
             obj.video.currentTime = 0;
         };
+        var pauseTimeout;
         const play = getMaskElementById(obj.mask, "play");
         play.onclick = () => {
+            clearTimeout(pauseTimeout);
             obj.video.currentTime = 0;
             obj.video.play().then(() => {
                 playpause.setAttribute("data-nextaction", "pause");
                 const duration = 1000 * obj.settings.durations[obj.guesses];
-                setTimeout(() => {
-                    setTimeout(
+                pauseTimeout = setTimeout(() => {
+                    pauseTimeout = setTimeout(
                         pause.onclick,
                         duration - 3 - obj.video.currentTime * 1000 // offset a bit
                     );
