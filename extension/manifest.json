@@ -17,7 +17,7 @@
         "default_icon": "favicon.png"
     },
     "web_accessible_resources": [{
-        "resources": ["mask.html"],
+        "resources": ["mask/*"],
         "matches": ["https://open.spotify.com/*"]
     }],
     "manifest_version": 3

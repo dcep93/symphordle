@@ -17,9 +17,9 @@ function main() {
         .then(getDivs)
         .then(getTracks)
         .then(fillMask)
-        .then(play)
         .then(finish)
-        .catch(removeMask);
+        .catch(removeMask)
+        .then(play);
 }
 
 function play(obj) {
@@ -78,7 +78,7 @@ function getMask() {
     const mask = document.createElement("div");
     mask.id = MASK_ID;
     document.body.appendChild(mask);
-    return fetch(chrome.runtime.getURL("mask.html"))
+    return fetch(chrome.runtime.getURL("mask/index.html"))
         .then((response) => response.text())
         .then((text) => (mask.innerHTML = text))
         .then(() => mask);
@@ -422,6 +422,9 @@ function renderSettings(obj) {
 
 function fillMask(obj) {
     console.log("fillMask", (Date.now() - obj.start) / 1000);
+    const s = document.createElement("script");
+    s.src = chrome.runtime.getURL("mask/index.js");
+    document.body.appendChild(s);
     return Promise.resolve().then(() => {
         getMaskElementById(
             obj.mask,
@@ -660,6 +663,7 @@ function finish(obj) {
     obj.mask.style.zIndex = 0;
     getMaskElementById(obj.mask, "close").onclick = () => obj.mask.remove();
     getMaskElementById(obj.mask, "loading").remove();
+    return obj;
 }
 
 main();
