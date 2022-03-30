@@ -86,7 +86,7 @@ function getMask() {
 
 function getTracks(obj) {
     console.log("getTracks", (Date.now() - obj.start) / 1000);
-    obj.main.style.opacity = 0.5;
+    obj.main.style.opacity = 0.3;
     obj.rowCount = parseInt(obj.tracklistDiv.getAttribute("aria-rowcount")) - 1;
     const spacing = obj.viewport.getElementsByClassName("contentSpacing")[0];
     obj.viewport.scrollTo({ top: spacing.offsetHeight });
@@ -103,7 +103,6 @@ function getTracks(obj) {
         .then((obj) => obj.viewport.scrollTo({ top: 0 }) || obj);
 }
 
-// todo dcep93
 function getTracksHelper(attempts, obj, resolve, reject) {
     if (attempts > GET_TRACKS_MAX_ATTEMPTS) return reject("too many attempts");
     const top = obj.viewport.scrollTop;
@@ -180,9 +179,6 @@ function setTargetIndex(obj) {
     console.log("setTargetIndex", (Date.now() - obj.start) / 1000);
     if (!location.hash.substring(1))
         location.hash = new Date().toLocaleDateString();
-    const link = getMaskElementById(obj.mask, "link");
-    link.innerText = location.href;
-    link.href = location.href;
     return Promise.resolve()
         .then(() => setSettings(obj))
         .then(() =>

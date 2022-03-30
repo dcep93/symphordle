@@ -12,6 +12,7 @@
         overflow: scroll;
         background-color: black;
         font-family: "Courier New", Courier, monospace;
+        padding: 1em;
     }
     
     .hover:hover {
@@ -51,61 +52,57 @@
         background-color: rgb(57, 42, 0);
     }
     
+    #round_durations .delete {
+        padding-left: 0.2em;
+        opacity: 0.5;
+    }
+    
     #round_durations>*:first-child .delete {
         display: none;
+    }
+    
+    #symphordle {
+        display: inline-flex;
     }
 </style>
 <div id="container">
     <h1>Welcome to <a href="https://google.com">Symphordle</a></h1>
     <div class="show_first">
         <div id="loading">loading <span id="loading_percent">0</span>%</div>
-        <div>
-            <div id="close" class="hover">close</div>
-            <div id="link"></div>
-            <div id="play_pause" data-nextaction="play">
-                <div id="play">
-                    <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Play" data-testid="control-button-playpause" style="--button-size: 32px" aria-expanded="false">
-            <svg
-              role="img"
-              height="16"
-              width="16"
-              viewBox="0 0 16 16"
-              class="Svg-sc-1bi12j5-0 hDgDGI"
-            >
-              <path
-                d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"
-              ></path>
-            </svg>
-          </button>
-                </div>
-                <div id="pause">
-                    <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Pause" data-testid="control-button-playpause" style="--button-size: 32px" aria-expanded="false">
-            <svg
-              role="img"
-              height="16"
-              width="16"
-              viewBox="0 0 16 16"
-              class="Svg-sc-1bi12j5-0 hDgDGI"
-            >
-              <path
-                d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z"
-              ></path>
-            </svg>
-          </button>
-                </div>
-            </div>
+        <div id="symphordle">
             <div>
-                <div>
-                    <div id="guesses"></div>
-                    <div id="next" class="hover"></div>
-                </div>
-                <div>
-                    <input id="input" type="text" size="50" autocomplete="off" />
-                    <div id="dropdown" class="hover"></div>
-                </div>
-                <div>
-                    <div id="answer_text"></div>
-                    <img id="answer_img" src="" />
+                <div id="close" class="hover">close</div>
+                <div id="play_pause" data-nextaction="play">
+                    <div id="play">
+                        <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Play" data-testid="control-button-playpause" style="--button-size: 32px" aria-expanded="false">
+              <svg
+                role="img"
+                height="16"
+                width="16"
+                viewBox="0 0 16 16"
+                class="Svg-sc-1bi12j5-0 hDgDGI"
+              >
+                <path
+                  d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"
+                ></path>
+              </svg>
+            </button>
+                    </div>
+                    <div id="pause">
+                        <button class="A8NeSZBojOQuVvK4l1pS" aria-label="Pause" data-testid="control-button-playpause" style="--button-size: 32px" aria-expanded="false">
+              <svg
+                role="img"
+                height="16"
+                width="16"
+                viewBox="0 0 16 16"
+                class="Svg-sc-1bi12j5-0 hDgDGI"
+              >
+                <path
+                  d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z"
+                ></path>
+              </svg>
+            </button>
+                    </div>
                 </div>
                 <div>
                     <h2>settings</h2>
@@ -118,6 +115,20 @@
                         <div id="round_durations"></div>
                         <input id="add_round" type="button" value="add round" />
                     </div>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <div id="guesses"></div>
+                    <div id="next" class="hover">.</div>
+                </div>
+                <div>
+                    <input id="input" type="text" size="50" autocomplete="off" />
+                    <div id="dropdown" class="hover"></div>
+                </div>
+                <div>
+                    <div id="answer_text"></div>
+                    <img id="answer_img" src="" />
                 </div>
             </div>
         </div>
