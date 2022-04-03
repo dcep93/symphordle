@@ -188,7 +188,10 @@ function normalize(str) {
     ["'", '"', ".", ","].forEach((r) => {
         str = str.replaceAll(r, "");
     });
-    return str.toLowerCase();
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
 }
 
 function setTargetIndex(obj) {
@@ -425,9 +428,11 @@ function renderSettings(obj) {
             const e = document.createElement("input");
             e.setAttribute("type", "number");
             e.value = duration;
-            e.onupdate = () => {
+            e.onchange = e.onkeyup = () => {
                 console.log("update", e.value);
-                obj.settings.durations[i] = e.value;
+                const v = e.value;
+                if (isNaN(parseInt(v))) return;
+                obj.settings.durations[i] = v;
                 updateSettings(obj);
             };
             const d = document.createElement("span");
@@ -651,6 +656,7 @@ function ensureLoaded(obj) {
             obj.video.volume = prevVolume;
             obj.video.currentTime = 0;
             console.log(obj.tracks[obj.targetIndex]);
+            getMaskElementById(obj.mask, "input").focus();
         })
         .then(() => obj);
 }
