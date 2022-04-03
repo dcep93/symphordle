@@ -430,8 +430,8 @@ function renderSettings(obj) {
             e.value = duration;
             e.onchange = e.onkeyup = () => {
                 console.log("update", e.value);
-                const v = e.value;
-                if (isNaN(parseInt(v))) return;
+                const v = parseFloat(e.value);
+                if (isNaN(v)) return;
                 obj.settings.durations[i] = v;
                 updateSettings(obj);
             };
