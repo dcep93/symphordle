@@ -3,6 +3,8 @@ function log(arg) {
     return arg;
 }
 
+var seen = { "": true };
+
 var MASK_ID = "symphordle_mask";
 var WAIT_FOR_DOM_TIMEOUT = 100;
 var DROPDOWN_MIN_LENGTH = 3;
@@ -153,6 +155,7 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                     ).map((artist) => artist.innerText),
                 };
                 track.normalizedTitle = normalize(track.title);
+                track.normalizedArtist = normalize(child.innerHTML);
                 track.displayName = `${track.title} - ${track.artists.join(", ")}`;
                 obj.tracks[index] = track;
             }
@@ -194,13 +197,21 @@ function setTargetIndex(obj) {
         location.hash = new Date().toLocaleDateString();
     return Promise.resolve()
         .then(() => setSettings(obj))
-        .then(() =>
-            Object.assign(obj, {
-                targetIndex: Math.floor(
+        .then(() => {
+            if (Object.keys(seen).length === obj.tracks.length + 1) {
+                seen = { "": true };
+            }
+            var targetIndex = "";
+            while (seen[targetIndex]) {
+                targetIndex = Math.floor(
                     obj.tracks.length * random(location.hash + obj.seed)
-                ),
-            })
-        );
+                );
+                obj.seed++;
+            }
+            seen[targetIndex] = true;
+            obj.targetIndex = targetIndex;
+            return obj;
+        });
 }
 
 function md5(inputString) {
@@ -344,6 +355,8 @@ function md5(inputString) {
 }
 
 function random(str) {
+    const specified = parseInt(str);
+    if (!isNaN(specified)) return specified;
     return parseInt(md5(str).substring(0, 8), 16) / Math.pow(2, 32);
 }
 
@@ -386,7 +399,9 @@ function setSettings(obj) {
             )
         )
         .then((settings) =>
-            Object.assign({ next_delay: "2.0", durations: ["1.0", "2.0"] }, settings)
+            Object.assign({ next_delay: "0", durations: ["1.0", "3.0", "8.0"] },
+                settings
+            )
         )
         .then((settings) => Object.assign(obj, { settings }))
         .then(renderSettings);
@@ -411,6 +426,7 @@ function renderSettings(obj) {
             e.setAttribute("type", "number");
             e.value = duration;
             e.onupdate = () => {
+                console.log("update", e.value);
                 obj.settings.durations[i] = e.value;
                 updateSettings(obj);
             };
@@ -521,6 +537,9 @@ function getDropdownChildren(value, obj) {
             (track) =>
             track.normalizedTitle === value ||
             (track.normalizedTitle.includes(value) &&
+                value.length >= DROPDOWN_MIN_LENGTH) ||
+            track.normalizedArtist === value ||
+            (track.normalizedArtist.includes(value) &&
                 value.length >= DROPDOWN_MIN_LENGTH)
         )
         .sort((a, b) => (a.normalizedTitle > b.normalizedTitle ? 1 : -1))
