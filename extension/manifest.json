@@ -1,7 +1,7 @@
 {
     "name": "Symphordle",
     "description": "Play a music guessing game on open.spotify.com",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "permissions": ["storage"],
     "icons": {
         "16": "favicon.png",

@@ -155,7 +155,6 @@ function getTracksHelper(attempts, obj, resolve, reject) {
                     ).map((artist) => artist.innerText),
                 };
                 track.normalizedTitle = normalize(track.title);
-                track.normalizedArtist = normalize(child.innerHTML);
                 track.displayName = `${track.title} - ${track.artists.join(", ")}`;
                 obj.tracks[index] = track;
             }
@@ -534,18 +533,27 @@ function fillMask(obj) {
     });
 }
 
+function anyMatch(needle, haystack) {
+    for (let i = 0; i < haystack.length; i++) {
+        let h = haystack[i];
+        if (
+            h === needle ||
+            (h.includes(needle) && needle.length >= DROPDOWN_MIN_LENGTH)
+        )
+            return true;
+    }
+    return false;
+}
+
 function getDropdownChildren(value, obj) {
     var selected = null;
     var allowed = false;
     return obj.tracks
-        .filter(
-            (track) =>
-            track.normalizedTitle === value ||
-            (track.normalizedTitle.includes(value) &&
-                value.length >= DROPDOWN_MIN_LENGTH) ||
-            track.normalizedArtist === value ||
-            (track.normalizedArtist.includes(value) &&
-                value.length >= DROPDOWN_MIN_LENGTH)
+        .filter((track) =>
+            anyMatch(
+                value,
+                track.artists.map(normalize).concat(track.normalizedTitle)
+            )
         )
         .sort((a, b) => (a.normalizedTitle > b.normalizedTitle ? 1 : -1))
         .sort((a, b) => (a.normalizedTitle.startsWith(value) ? -1 : 1))
